@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package auth;
+
+// Path to generated code
+option go_package = "github.com/SternKater/carsharing/pkg/auth;auth";
+
+message SignInRequest {
+  string user_name            = 1;
+  string user_password        = 2;
+  string user_identify_string = 3;
+}
+
+message SignInResponse {
+  bool success          = 1;
+  string refresh_token  = 2;
+  string access_token   = 3;
+  string message        = 4;
+}
+
+message SignOutRequest {
+  string user_identify = 1;
+}
+
+message SignOutResponse {
+  bool success  = 1;
+  string message= 2;
+}
+
+message SignUpRequest {
+}
+
+message SignUpResponse {
+}
+
+message AuthRefreshRequest {
+}
+
+message AuthRefreshResponse {
+}
+
+service AuthService {
+  rpc SignIn (SignInRequest) returns (SignInResponse);
+  rpc SignUp (SignUpRequest) returns (SignUpResponse);
+  rpc SignOut (SignOutRequest) returns (SignOutResponse);
+  rpc AuthRefresh (AuthRefreshRequest) returns (AuthRefreshResponse);
+}
