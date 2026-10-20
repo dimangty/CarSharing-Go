@@ -246,9 +246,12 @@ func (x *SignOutResponse) GetMessage() string {
 }
 
 type SignUpRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	UserName            string                 `protobuf:"bytes,1,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
+	UserPassword        string                 `protobuf:"bytes,2,opt,name=user_password,json=userPassword,proto3" json:"user_password,omitempty"`
+	UserPasswordConfirm string                 `protobuf:"bytes,3,opt,name=user_password_confirm,json=userPasswordConfirm,proto3" json:"user_password_confirm,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *SignUpRequest) Reset() {
@@ -281,8 +284,33 @@ func (*SignUpRequest) Descriptor() ([]byte, []int) {
 	return file_auth_auth_proto_rawDescGZIP(), []int{4}
 }
 
+func (x *SignUpRequest) GetUserName() string {
+	if x != nil {
+		return x.UserName
+	}
+	return ""
+}
+
+func (x *SignUpRequest) GetUserPassword() string {
+	if x != nil {
+		return x.UserPassword
+	}
+	return ""
+}
+
+func (x *SignUpRequest) GetUserPasswordConfirm() string {
+	if x != nil {
+		return x.UserPasswordConfirm
+	}
+	return ""
+}
+
 type SignUpResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,3,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	Message       string                 `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -317,8 +345,37 @@ func (*SignUpResponse) Descriptor() ([]byte, []int) {
 	return file_auth_auth_proto_rawDescGZIP(), []int{5}
 }
 
+func (x *SignUpResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SignUpResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *SignUpResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *SignUpResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 type AuthRefreshRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -353,8 +410,18 @@ func (*AuthRefreshRequest) Descriptor() ([]byte, []int) {
 	return file_auth_auth_proto_rawDescGZIP(), []int{6}
 }
 
+func (x *AuthRefreshRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
 type AuthRefreshResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,3,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -389,6 +456,27 @@ func (*AuthRefreshResponse) Descriptor() ([]byte, []int) {
 	return file_auth_auth_proto_rawDescGZIP(), []int{7}
 }
 
+func (x *AuthRefreshResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *AuthRefreshResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *AuthRefreshResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
 var File_auth_auth_proto protoreflect.FileDescriptor
 
 const file_auth_auth_proto_rawDesc = "" +
@@ -407,11 +495,22 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\ruser_identify\x18\x01 \x01(\tR\fuserIdentify\"E\n" +
 	"\x0fSignOutResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x0f\n" +
-	"\rSignUpRequest\"\x10\n" +
-	"\x0eSignUpResponse\"\x14\n" +
-	"\x12AuthRefreshRequest\"\x15\n" +
-	"\x13AuthRefreshResponse2\xf3\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x85\x01\n" +
+	"\rSignUpRequest\x12\x1b\n" +
+	"\tuser_name\x18\x01 \x01(\tR\buserName\x12#\n" +
+	"\ruser_password\x18\x02 \x01(\tR\fuserPassword\x122\n" +
+	"\x15user_password_confirm\x18\x03 \x01(\tR\x13userPasswordConfirm\"\x8c\x01\n" +
+	"\x0eSignUpResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12!\n" +
+	"\faccess_token\x18\x03 \x01(\tR\vaccessToken\x12\x18\n" +
+	"\amessage\x18\x04 \x01(\tR\amessage\"9\n" +
+	"\x12AuthRefreshRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"w\n" +
+	"\x13AuthRefreshResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12!\n" +
+	"\faccess_token\x18\x03 \x01(\tR\vaccessToken2\xf3\x01\n" +
 	"\vAuthService\x123\n" +
 	"\x06SignIn\x12\x13.auth.SignInRequest\x1a\x14.auth.SignInResponse\x123\n" +
 	"\x06SignUp\x12\x13.auth.SignUpRequest\x1a\x14.auth.SignUpResponse\x126\n" +
