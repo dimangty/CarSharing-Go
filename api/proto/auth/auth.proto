@@ -30,7 +30,6 @@ message SignOutResponse {
 message SignUpRequest {
   string user_name = 1;
   string user_password = 2;
-  string user_password_confirm = 3;
 }
 
 message SignUpResponse {
@@ -42,6 +41,7 @@ message SignUpResponse {
 
 message AuthRefreshRequest {
   string refresh_token = 1;
+  string user_identify_string = 2;
 }
 
 message AuthRefreshResponse {
