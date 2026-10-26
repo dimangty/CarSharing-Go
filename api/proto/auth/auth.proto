@@ -3,7 +3,7 @@ syntax = "proto3";
 package auth;
 
 // Path to generated code
-option go_package = "github.com/SternKater/carsharing/pkg/auth;auth";
+option go_package = "carsharing/pkg/auth;auth";
 
 message SignInRequest {
   string user_name            = 1;

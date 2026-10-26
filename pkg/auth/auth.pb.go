@@ -515,7 +515,7 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\x06SignIn\x12\x13.auth.SignInRequest\x1a\x14.auth.SignInResponse\x123\n" +
 	"\x06SignUp\x12\x13.auth.SignUpRequest\x1a\x14.auth.SignUpResponse\x126\n" +
 	"\aSignOut\x12\x14.auth.SignOutRequest\x1a\x15.auth.SignOutResponse\x12B\n" +
-	"\vAuthRefresh\x12\x18.auth.AuthRefreshRequest\x1a\x19.auth.AuthRefreshResponseB0Z.github.com/SternKater/carsharing/pkg/auth;authb\x06proto3"
+	"\vAuthRefresh\x12\x18.auth.AuthRefreshRequest\x1a\x19.auth.AuthRefreshResponseB\x1aZ\x18carsharing/pkg/auth;authb\x06proto3"
 
 var (
 	file_auth_auth_proto_rawDescOnce sync.Once
