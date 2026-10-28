@@ -2,145 +2,74 @@ package main
 
 import (
 	"context"
+	"errors"
+	"flag"
+	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"carsharing/internal/delivery/grpc/interceptors"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 )
 
 func main() {
+	addr := flag.String("addr", ":50051", "gRPC listen address")
+	flag.Parse()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	if err := run(ctx, *addr); err != nil {
+		log.Fatal(err)
+	}
+}
 
-	// Reddis
-	redisConnStr := os.Getenv("REDIS_CONN_STR")
-	if redisConnStr == "" {
-		redisConnStr = "localhost:6380"
+func run(ctx context.Context, addr string) error {
+	redisAddr := os.Getenv("REDIS_CONN_STR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6380"
 	}
-	rdb := redis.NewClient(&redis.Options{Addr: redisConnStr})
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		log.Fatalf("[SERVER]: Failed to ping Redis: %v", err)
-	}
+	rdb := redis.NewClient(&redis.Options{Addr: redisAddr})
 	defer rdb.Close()
-	// Rate Limit check
-	rateLimiterInterceptor, err := interceptors.NewUnaryRateLimiterInterceptor(rdb, 10, 60, "scripts/lua/rate_limiter.lua")
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		return fmt.Errorf("ping Redis: %w", err)
+	}
+	rate, err := interceptors.NewUnaryRateLimiterInterceptor(rdb, 10, 60, "scripts/lua/rate_limiter.lua")
 	if err != nil {
-		log.Fatalf("[SERVER]: Failed to create RateLimiterInterceptor: %v", err)
+		return fmt.Errorf("create rate limiter: %w", err)
 	}
-	// BruteForce Limit check
-	// bruteForceLimiterInterceptor, err := interceptors.NewUnaryBruteForceLimiterInterceptor(rdb, 5, 30, "scripts/lua/rate_limiter.lua")
-	// if err != nil {
-	// 	log.Fatalf("[SERVER]: Failed to create BruteForceLimiterInterceptor: %v", err)
-	// }
-	// JWT-token check
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "jwt-secret"
-	}
-
-	// tkMgr := tokens.NewTokenManager([]byte(jwtSecret))
-	// tokenInterceptor := interceptors.NewUnaryTokenInterceptor(rdb, tkMgr)
-
-	grpcServer := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			rateLimiterInterceptor.UnaryServerInterceptor,
-			// bruteForceLimiterInterceptor.UnaryServerInterceptor,
-			// tokenInterceptor.UnaryServerInterceptor,
-		),
-	)
-	defer grpcServer.GracefulStop()
-
-	// DB routine
-	postgresConnStr := os.Getenv("POSTGRES_CONN_STR")
-	if postgresConnStr == "" {
-		postgresConnStr = "postgres://user:password@localhost:5433/carsharing_db"
-	}
-	postgresPool, err := pgxpool.New(ctx, postgresConnStr)
+	brute, err := interceptors.NewUnaryBruteForceLimiterInterceptor(rdb, 5, 30, "scripts/lua/rate_limiter.lua")
 	if err != nil {
-		log.Fatalf("[SERVER]: Failed to connect to db: %v", err)
+		return fmt.Errorf("create brute-force limiter: %w", err)
 	}
-	if err := postgresPool.Ping(ctx); err != nil {
-		log.Fatalf("[SERVER]: DB ping error: %v", err)
+	token := interceptors.NewUnaryTokenInterceptor(rdb, interceptors.MetadataTokenExtractor{})
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		rate.UnaryServerInterceptor,
+		brute.UnaryServerInterceptor,
+		token.UnaryServerInterceptor,
+	))
+	defer server.Stop()
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("listen: %w", err)
 	}
-	defer postgresPool.Close()
-
-	// repository
-	// txManager := postgres.NewTxManager(postgresPool)
-	// authRepo := postgres.NewAuthRepository(postgresPool)
-	// service
-	// authService := service.NewAuthService(authRepo, tkMgr, txManager)
-	// handler
-	// authHandler := handler.NewAuthHandler(authService)
-	// auth.RegisterAuthServiceServer(grpcServer, authHandler)
-
-	// same as prev
-	// carsRepo := postgres.NewCarsRepository(postgresPool)
-	// carsService := service.NewCarsService(carsRepo)
-	// carsHandler := handler.NewCarsHandler(carsService)
-	// cars.RegisterCarsServiceServer(grpcServer, carsHandler)
-
-	// balance
-	// balanceRepo := postgres.NewBalanceRepository(postgresPool)
-	// balanceService := service.NewBalanceService(balanceRepo)
-	// balanceHandler := handler.NewBalanceHandler(balanceService)
-	// wallet.RegisterBalanceServiceServer(grpcServer, balanceHandler)
-
-	// smth like payment system
-	// myMoneyConnStr := os.Getenv("MYMONEY_CONN_STR")
-	// if myMoneyConnStr == "" {
-	// 	redisConnStr = "localhost:50052"
-	// }
-	// myMoneyConn, err := grpc.NewClient(myMoneyConnStr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	// if err != nil {
-	// 	log.Fatalf("[SERVER]: Failed to connect to MyMoney service: %v", err)
-	// }
-	// defer myMoneyConn.Close()
-	// myMoneyClient := mymoney.NewMyMoneyServiceClient(myMoneyConn)
-
-	// deposit
-	// depositRepo := postgres.NewDepositRepository(postgresPool)
-	// depositService := service.NewDepositService(depositRepo, rdb, myMoneyClient, txManager)
-	// depositHandler := handler.NewDepositHandler(depositService)
-	// wallet.RegisterDepositServiceServer(grpcServer, depositHandler)
-
-	// callbackHandler := handler.NewPaymentCallbackHandler(depositService)
-	// mymoney.RegisterMyMoneyCallbackServiceServer(grpcServer, callbackHandler)
-
-	// pay for fun
-	//payRepo := postgres.NewPayRepository(postgresPool)
-
-	// Rentals
-	// rentalsRepo := postgres.NewRentalsRepository(postgresPool)
-	// rentalsService := service.NewRentalsService(rentalsRepo, payRepo, txManager)
-	// rentalsHandler := handler.NewRentalsHandler(rentalsService)
-	// rentals.RegisterRentalsServiceServer(grpcServer, rentalsHandler)
-
-	// histury
-	// historyRepo := postgres.NewHistoryRepository(postgresPool)
-	// historyService := service.NewHistoryService(historyRepo)
-	// historyHandler := handler.NewHistoryHandler(historyService)
-	// history.RegisterBillingHistoryServiceServer(grpcServer, historyHandler)
-
-	// lis, err := net.Listen("tcp", ":50051")
-	// if err != nil {
-	// 	log.Fatalf("Failed to listen: %v", err)
-	// }
-
-	// go func() {
-	// 	log.Println("🚀[SERVER]: gRPC server is started on :50051")
-	// 	if err := grpcServer.Serve(lis); err != nil && err != grpc.ErrServerStopped {
-	// 		log.Fatalf("[SERVER]: Failed to serve: %v", err)
-	// 	}
-	// }()
-
-	// <-ctx.Done()
-	// log.Println("🛑[SERVER]: Shutdown signal received. Stopping gracefully...")
-
-	log.Println("👋[SERVER]: Server successfully stopped. Bye!")
+	defer lis.Close()
+	done := make(chan struct{})
+	defer close(done)
+	go func() {
+		select {
+		case <-ctx.Done():
+			server.GracefulStop()
+		case <-done:
+		}
+	}()
+	log.Printf("[SERVER] gRPC server listening on %s (rate → brute-force → auth)", lis.Addr())
+	if err := server.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+		return fmt.Errorf("serve gRPC: %w", err)
+	}
+	log.Print("[SERVER] Stopped")
+	return nil
 }
