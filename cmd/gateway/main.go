@@ -2,74 +2,101 @@ package main
 
 import (
 	"context"
-	"errors"
-	"flag"
-	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"carsharing/internal/delivery/grpc/handler"
 	"carsharing/internal/delivery/grpc/interceptors"
+	"carsharing/internal/service"
+	"carsharing/internal/tokens"
+	"carsharing/pkg/auth"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	addr := flag.String("addr", ":50051", "gRPC listen address")
-	flag.Parse()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if err := run(ctx, *addr); err != nil {
-		log.Fatal(err)
-	}
-}
 
-func run(ctx context.Context, addr string) error {
-	redisAddr := os.Getenv("REDIS_CONN_STR")
-	if redisAddr == "" {
-		redisAddr = "localhost:6380"
+	// Reddis
+	redisConnStr := os.Getenv("REDIS_CONN_STR")
+	if redisConnStr == "" {
+		redisConnStr = "localhost:6380"
 	}
-	rdb := redis.NewClient(&redis.Options{Addr: redisAddr})
-	defer rdb.Close()
+	rdb := redis.NewClient(&redis.Options{Addr: redisConnStr})
 	if err := rdb.Ping(ctx).Err(); err != nil {
-		return fmt.Errorf("ping Redis: %w", err)
+		log.Fatalf("[SERVER]: Failed to ping Redis: %v", err)
 	}
-	rate, err := interceptors.NewUnaryRateLimiterInterceptor(rdb, 10, 60, "scripts/lua/rate_limiter.lua")
+	defer rdb.Close()
+	// Rate Limit check
+	rateLimiterInterceptor, err := interceptors.NewUnaryRateLimiterInterceptor(rdb, 10, 60, "scripts/lua/rate_limiter.lua")
 	if err != nil {
-		return fmt.Errorf("create rate limiter: %w", err)
+		log.Fatalf("[SERVER]: Failed to create RateLimiterInterceptor: %v", err)
 	}
-	brute, err := interceptors.NewUnaryBruteForceLimiterInterceptor(rdb, 5, 30, "scripts/lua/rate_limiter.lua")
+	// BruteForce Limit check
+	bruteForceLimiterInterceptor, err := interceptors.NewUnaryBruteForceLimiterInterceptor(rdb, 5, 30, "scripts/lua/rate_limiter.lua")
 	if err != nil {
-		return fmt.Errorf("create brute-force limiter: %w", err)
+		log.Fatalf("[SERVER]: Failed to create BruteForceLimiterInterceptor: %v", err)
 	}
-	token := interceptors.NewUnaryTokenInterceptor(rdb, interceptors.MetadataTokenExtractor{})
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		rate.UnaryServerInterceptor,
-		brute.UnaryServerInterceptor,
-		token.UnaryServerInterceptor,
-	))
-	defer server.Stop()
-	lis, err := net.Listen("tcp", addr)
+	// JWT-token check
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "jwt-secret"
+	}
+
+	tkMgr := tokens.NewTokenManager([]byte(jwtSecret))
+	tokenInterceptor := interceptors.NewUnaryTokenInterceptor(rdb, tkMgr)
+
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			rateLimiterInterceptor.UnaryServerInterceptor,
+			bruteForceLimiterInterceptor.UnaryServerInterceptor,
+			tokenInterceptor.UnaryServerInterceptor,
+		),
+	)
+
+	// DB routine
+	postgresConnStr := os.Getenv("POSTGRES_CONN_STR")
+	if postgresConnStr == "" {
+		postgresConnStr = "postgres://user:password@localhost:5433/carsharing_db"
+	}
+	postgresPool, err := pgxpool.New(ctx, postgresConnStr)
 	if err != nil {
-		return fmt.Errorf("listen: %w", err)
+		log.Fatalf("[SERVER]: Failed to connect to db: %v", err)
 	}
-	defer lis.Close()
-	done := make(chan struct{})
-	defer close(done)
+	if err := postgresPool.Ping(ctx); err != nil {
+		log.Fatalf("[SERVER]: DB ping error: %v", err)
+	}
+	defer postgresPool.Close()
+
+	// service
+	authRepo := service.NewAuthRepository()
+	authService := service.NewAuthService(authRepo, tkMgr)
+	// handler
+	authHandler := handler.NewAuthHandler(authService)
+	auth.RegisterAuthServiceServer(grpcServer, authHandler)
+
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
 	go func() {
-		select {
-		case <-ctx.Done():
-			server.GracefulStop()
-		case <-done:
+		log.Println("🚀[SERVER]: gRPC server is started on :50051")
+		if err := grpcServer.Serve(lis); err != nil && err != grpc.ErrServerStopped {
+			log.Fatalf("[SERVER]: Failed to serve: %v", err)
 		}
 	}()
-	log.Printf("[SERVER] gRPC server listening on %s (rate → brute-force → auth)", lis.Addr())
-	if err := server.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
-		return fmt.Errorf("serve gRPC: %w", err)
-	}
-	log.Print("[SERVER] Stopped")
-	return nil
+
+	<-ctx.Done()
+	log.Println("🛑[SERVER]: Shutdown signal received. Stopping gracefully...")
+
+	grpcServer.GracefulStop()
+
+	log.Println("👋[SERVER]: Server successfully stopped. Bye!")
 }

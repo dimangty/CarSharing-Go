@@ -3,11 +3,11 @@ module carsharing
 go 1.26.2
 
 require (
-	github.com/SternKater/carsharing v0.0.0-20260713085800-2cd0367003b1
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/redis/go-redis/v9 v9.20.0
 	github.com/stretchr/testify v1.11.1
+	golang.org/x/crypto v0.51.0
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
 )
