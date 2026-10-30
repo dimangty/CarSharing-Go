@@ -76,9 +76,8 @@ func main() {
 
 	// service
 	authRepo := service.NewAuthRepository()
-	authService := service.NewAuthService(authRepo, tkMgr)
 	// handler
-	authHandler := handler.NewAuthHandler(authService)
+	authHandler := handler.NewAuthHandler(authRepo)
 	auth.RegisterAuthServiceServer(grpcServer, authHandler)
 
 	lis, err := net.Listen("tcp", ":50051")
