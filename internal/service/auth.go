@@ -5,6 +5,9 @@ import (
 	"time"
 
 	"carsharing/internal/domain"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type AuthRepositoryInterface interface {
@@ -48,18 +51,12 @@ func NewAuthService(r AuthRepositoryInterface, t AuthTokenInterface) *AuthServic
 }
 
 func (a *AuthRepository) CreateUser(ctx context.Context, login string, password string, userIdentify string) (*domain.Auth, error) {
-	return &domain.Auth{
-		RefreshToken: "",
-		AccessToken:  "",
-	}, nil
+	return nil, status.Error(codes.Unimplemented, "Registration is not implemented")
 }
 
 func (a *AuthRepository) LoginUser(ctx context.Context, login string, password string, userIdentify string) (*domain.Auth, error) {
 
-	return &domain.Auth{
-		AccessToken:  "",
-		RefreshToken: "",
-	}, nil
+	return nil, status.Error(codes.Unimplemented, "Sign in is not implemented")
 }
 
 func (a *AuthRepository) LogoutUser(ctx context.Context, userId int64, userIdentify string) error {
