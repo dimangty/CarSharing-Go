@@ -374,10 +374,11 @@ func (x *SignUpResponse) GetMessage() string {
 }
 
 type AuthRefreshRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken       string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	UserIdentifyString string                 `protobuf:"bytes,2,opt,name=user_identify_string,json=userIdentifyString,proto3" json:"user_identify_string,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *AuthRefreshRequest) Reset() {
@@ -413,6 +414,13 @@ func (*AuthRefreshRequest) Descriptor() ([]byte, []int) {
 func (x *AuthRefreshRequest) GetRefreshToken() string {
 	if x != nil {
 		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *AuthRefreshRequest) GetUserIdentifyString() string {
+	if x != nil {
+		return x.UserIdentifyString
 	}
 	return ""
 }
@@ -504,9 +512,10 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
 	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12!\n" +
 	"\faccess_token\x18\x03 \x01(\tR\vaccessToken\x12\x18\n" +
-	"\amessage\x18\x04 \x01(\tR\amessage\"9\n" +
+	"\amessage\x18\x04 \x01(\tR\amessage\"k\n" +
 	"\x12AuthRefreshRequest\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"w\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\x120\n" +
+	"\x14user_identify_string\x18\x02 \x01(\tR\x12userIdentifyString\"w\n" +
 	"\x13AuthRefreshResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
 	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12!\n" +

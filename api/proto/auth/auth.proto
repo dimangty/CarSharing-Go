@@ -30,6 +30,7 @@ message SignOutResponse {
 message SignUpRequest {
   string user_name = 1;
   string user_password = 2;
+  string user_password_confirm = 3;
 }
 
 message SignUpResponse {
