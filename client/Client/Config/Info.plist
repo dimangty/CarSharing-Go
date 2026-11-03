@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>GRPC_HOST</key>
+    <string>$(GRPC_HOST)</string>
+    <key>GRPC_PORT</key>
+    <string>$(GRPC_PORT)</string>
+    <key>GRPC_TLS</key>
+    <string>$(GRPC_TLS)</string>
+</dict>
+</plist>

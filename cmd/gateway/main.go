@@ -23,15 +23,6 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	authService, err := service.SelectAuthService(os.Getenv("APP_ENV"), os.Getenv("AUTH_MOCK_ENABLED"))
-	if err != nil {
-		log.Fatalf("[SERVER]: Auth configuration: %v", err)
-	}
-	_, mockEnabled := authService.(*service.MockAuthService)
-	if mockEnabled {
-		log.Println("[SERVER]: LOCAL MOCK AUTH enabled; PostgreSQL is not initialized")
-	}
-
 	// Reddis
 	redisConnStr := os.Getenv("REDIS_CONN_STR")
 	if redisConnStr == "" {

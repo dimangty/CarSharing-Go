@@ -1,0 +1,14 @@
+# macOS metadata
+.DS_Store
+
+# Swift Package Manager and Xcode build products
+.build/
+DerivedData/
+build/
+*.dSYM/
+*.xcarchive/
+*.ipa
+
+# Local Xcode user settings
+xcuserdata/
+*.xcuserstate
