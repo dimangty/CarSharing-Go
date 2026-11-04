@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 
 	"carsharing/internal/domain"
 	"carsharing/pkg/auth"
@@ -12,6 +13,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -45,7 +47,7 @@ func (u *UnaryTokenInterceptor) UnaryServerInterceptor(ctx context.Context, req 
 	}
 
 	// no authorization field or invalid field format
-	token, err := u.tokenExtractor.ExtractAuthToken(ctx)
+	token, err := extractAuthToken(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -71,4 +73,16 @@ func (u *UnaryTokenInterceptor) UnaryServerInterceptor(ctx context.Context, req 
 	}
 
 	return handler(context.WithValue(ctx, domain.UserIDKey, claims.UserID), req)
+}
+
+func extractAuthToken(ctx context.Context) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok || len(md.Get("authorization")) != 1 {
+		return "", status.Error(codes.Unauthenticated, "A single authorization header is required")
+	}
+	fields := strings.Fields(md.Get("authorization")[0])
+	if len(fields) != 2 || !strings.EqualFold(fields[0], "Bearer") {
+		return "", status.Error(codes.Unauthenticated, "Expected Bearer token")
+	}
+	return fields[1], nil
 }

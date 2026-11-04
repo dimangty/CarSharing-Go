@@ -45,7 +45,7 @@ func authMessageFixtures() []struct {
 		{
 			name: "SignUpRequest",
 			message: &SignUpRequest{
-				UserName: "n", UserPassword: "p", UserPasswordConfirm: "c",
+				UserName: "n", UserPassword: "p", UserIdentifyString: "c",
 			},
 			wireHex: "0a016e1201701a0163",
 		},

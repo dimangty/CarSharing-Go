@@ -47,7 +47,7 @@ func authRPCFixtures() []authRPCFixture {
 		},
 		{
 			name: "SignUp", method: "/auth.AuthService/SignUp",
-			request:  &SignUpRequest{UserName: "bob", UserPassword: "password", UserPasswordConfirm: "password"},
+			request:  &SignUpRequest{UserName: "bob", UserPassword: "password", UserIdentifyString: "id"},
 			response: &SignUpResponse{Success: true, RefreshToken: "refresh", AccessToken: "access", Message: "signed up"},
 			clientCall: func(ctx context.Context, client AuthServiceClient, request proto.Message, opts ...grpc.CallOption) (proto.Message, error) {
 				return client.SignUp(ctx, request.(*SignUpRequest), opts...)

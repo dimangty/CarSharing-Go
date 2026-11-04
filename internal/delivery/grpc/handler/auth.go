@@ -49,19 +49,11 @@ func (a *AuthHandler) SignUp(
 	req *auth.SignUpRequest,
 ) (*auth.SignUpResponse, error) {
 
-	if req.GetUserPasswordConfirm() == "" ||
-		req.GetUserPassword() != req.GetUserPasswordConfirm() {
-		return nil, status.Error(
-			codes.InvalidArgument,
-			"Password confirmation must match",
-		)
-	}
-
 	result, err := a.service.CreateUser(
 		ctx,
 		req.GetUserName(),
 		req.GetUserPassword(),
-		"",
+		req.GetUserIdentifyString(),
 	)
 	if err != nil {
 		return nil, err

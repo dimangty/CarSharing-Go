@@ -246,12 +246,12 @@ func (x *SignOutResponse) GetMessage() string {
 }
 
 type SignUpRequest struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	UserName            string                 `protobuf:"bytes,1,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
-	UserPassword        string                 `protobuf:"bytes,2,opt,name=user_password,json=userPassword,proto3" json:"user_password,omitempty"`
-	UserPasswordConfirm string                 `protobuf:"bytes,3,opt,name=user_password_confirm,json=userPasswordConfirm,proto3" json:"user_password_confirm,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	UserName           string                 `protobuf:"bytes,1,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
+	UserPassword       string                 `protobuf:"bytes,2,opt,name=user_password,json=userPassword,proto3" json:"user_password,omitempty"`
+	UserIdentifyString string                 `protobuf:"bytes,3,opt,name=user_identify_string,json=userIdentifyString,proto3" json:"user_identify_string,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *SignUpRequest) Reset() {
@@ -298,9 +298,9 @@ func (x *SignUpRequest) GetUserPassword() string {
 	return ""
 }
 
-func (x *SignUpRequest) GetUserPasswordConfirm() string {
+func (x *SignUpRequest) GetUserIdentifyString() string {
 	if x != nil {
-		return x.UserPasswordConfirm
+		return x.UserIdentifyString
 	}
 	return ""
 }
@@ -503,11 +503,11 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\ruser_identify\x18\x01 \x01(\tR\fuserIdentify\"E\n" +
 	"\x0fSignOutResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x85\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x83\x01\n" +
 	"\rSignUpRequest\x12\x1b\n" +
 	"\tuser_name\x18\x01 \x01(\tR\buserName\x12#\n" +
-	"\ruser_password\x18\x02 \x01(\tR\fuserPassword\x122\n" +
-	"\x15user_password_confirm\x18\x03 \x01(\tR\x13userPasswordConfirm\"\x8c\x01\n" +
+	"\ruser_password\x18\x02 \x01(\tR\fuserPassword\x120\n" +
+	"\x14user_identify_string\x18\x03 \x01(\tR\x12userIdentifyString\"\x8c\x01\n" +
 	"\x0eSignUpResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
 	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12!\n" +
