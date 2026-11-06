@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"carsharing/internal/domain"
@@ -50,19 +51,29 @@ func NewAuthService(r AuthRepositoryInterface, t AuthTokenInterface) *AuthServic
 	}
 }
 
-func (a *AuthRepository) CreateUser(ctx context.Context, login string, password string, userIdentify string) (*domain.Auth, error) {
-	return nil, status.Error(codes.Unimplemented, "Registration is not implemented")
+func (a *AuthService) CreateUser(ctx context.Context, login string, password string, userIdentify string) (*domain.Auth, error) {
+	return mockAuthentication(login, password)
 }
 
-func (a *AuthRepository) LoginUser(ctx context.Context, login string, password string, userIdentify string) (*domain.Auth, error) {
+func (a *AuthService) LoginUser(ctx context.Context, login string, password string, userIdentify string) (*domain.Auth, error) {
 
-	return nil, status.Error(codes.Unimplemented, "Sign in is not implemented")
+	return mockAuthentication(login, password)
 }
 
-func (a *AuthRepository) LogoutUser(ctx context.Context, userId int64, userIdentify string) error {
+func (a *AuthService) LogoutUser(ctx context.Context, userId int64, userIdentify string) error {
 	return domain.ErrInvalidRefreshToken
 }
 
-func (a *AuthRepository) NewTokenUser(ctx context.Context, refreshToken string, userIdentify string) (*domain.Auth, error) {
+func (a *AuthService) NewTokenUser(ctx context.Context, refreshToken string, userIdentify string) (*domain.Auth, error) {
 	return nil, domain.ErrInvalidRefreshToken
+}
+
+func mockAuthentication(login, password string) (*domain.Auth, error) {
+	if strings.TrimSpace(login) == "" || strings.TrimSpace(password) == "" {
+		return nil, status.Error(codes.InvalidArgument, "Username and password are required")
+	}
+	return &domain.Auth{
+		ID: 1, Name: login,
+		AccessToken: "mock_access_token", RefreshToken: "mock_refresh_token",
+	}, nil
 }

@@ -75,8 +75,8 @@ func main() {
 	defer postgresPool.Close()
 
 	// handler
-	mockAuth := &service.MockAuthService{}
-	authHandler := handler.NewAuthHandler(mockAuth)
+	authService := service.NewAuthService(nil, nil)
+	authHandler := handler.NewAuthHandler(authService)
 
 	auth.RegisterAuthServiceServer(grpcServer, authHandler)
 
