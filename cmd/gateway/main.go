@@ -10,6 +10,7 @@ import (
 
 	"carsharing/internal/delivery/grpc/handler"
 	"carsharing/internal/delivery/grpc/interceptors"
+	"carsharing/internal/repository/mock"
 	"carsharing/internal/service"
 	"carsharing/internal/tokens"
 	"carsharing/pkg/auth"
@@ -75,7 +76,9 @@ func main() {
 	defer postgresPool.Close()
 
 	// handler
-	authService := service.NewAuthService(nil, nil)
+	// repository in service
+	authRepository := mock.NewMockAuthRepository()
+	authService := service.NewAuthService(authRepository, nil)
 	authHandler := handler.NewAuthHandler(authService)
 
 	auth.RegisterAuthServiceServer(grpcServer, authHandler)
