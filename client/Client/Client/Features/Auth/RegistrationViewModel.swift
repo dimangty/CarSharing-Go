@@ -34,7 +34,7 @@ final class RegistrationViewModel {
         defer { isLoading = false }
         do {
             try Task.checkCancellation()
-            let session = try await repository.signUp(login: normalizedLogin, password: password, confirmation: confirmation)
+            let session = try await repository.signUp(login: normalizedLogin, password: password)
             try Task.checkCancellation()
             try storage.save(session)
             password = ""

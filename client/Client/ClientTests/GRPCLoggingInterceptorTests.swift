@@ -82,7 +82,7 @@ final class GRPCLoggingInterceptorTests: XCTestCase {
             var message = Auth_SignUpRequest()
             message.userName = name
             message.userPassword = "PASSWORD_SECRET"
-            message.userPasswordConfirm = "PASSWORD_SECRET"
+            message.userIdentifyString = "ios-\(name)"
             return message
         }
         let request = StreamingClientRequest<Auth_SignUpRequest> { writer in
@@ -98,7 +98,7 @@ final class GRPCLoggingInterceptorTests: XCTestCase {
         XCTAssertEqual(entries.count, 2)
         let payloads = try entries.map { try payload(in: [$0], event: "request") }
         XCTAssertEqual(payloads.compactMap { $0["userName"] as? String }, ["first", "second"])
-        XCTAssertEqual(payloads.compactMap { $0["userPasswordConfirm"] as? String }, ["PASSWORD_SECRET", "PASSWORD_SECRET"])
+        XCTAssertEqual(payloads.compactMap { $0["userIdentifyString"] as? String }, ["ios-first", "ios-second"])
         assertNoMetadataOrErrorDetails(logs.lines)
     }
 

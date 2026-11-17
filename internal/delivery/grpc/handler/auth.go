@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 
 	"carsharing/internal/domain"
 	"carsharing/pkg/auth"
@@ -79,6 +80,12 @@ func (a *AuthHandler) SignIn(
 		req.GetUserIdentifyString(),
 	)
 	if err != nil {
+		if errors.Is(err, domain.ErrInvalidCredentials) {
+			return nil, status.Error(
+				codes.Unauthenticated,
+				"invalid login or password",
+			)
+		}
 		return nil, err
 	}
 

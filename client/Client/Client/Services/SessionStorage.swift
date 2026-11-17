@@ -6,7 +6,8 @@ protocol SessionStorage {
     func save(_ session: AuthSession) throws
 }
 
-// Only local Debug builds persist these mock tokens. Passwords never enter storage.
+// Persist the active pair ID and any token fields returned by the server.
+// Empty tokens are valid while token issuance is not implemented. Passwords never enter storage.
 @MainActor
 struct KeychainSessionStorage: SessionStorage {
     let service: String
@@ -16,7 +17,6 @@ struct KeychainSessionStorage: SessionStorage {
     }
 
     func save(_ session: AuthSession) throws {
-        #if DEBUG
         let data = try JSONEncoder().encode(session)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -34,8 +34,5 @@ struct KeychainSessionStorage: SessionStorage {
         } else if status != errSecSuccess {
             throw AuthError.storage
         }
-        #else
-        throw AuthError.storage
-        #endif
     }
 }

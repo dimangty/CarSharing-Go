@@ -18,10 +18,11 @@ final class GRPCIntegrationTests: XCTestCase {
         return AppGRPCClient(configuration: try GRPCConfiguration.application())
     }
 
-    func testRealSignUpNavigatesToSuccessAndPersistsTokens() async throws {
-        let repository = GRPCAuthRepository(client: try realClient())
+    func testRealSignUpNavigatesToSuccessAndPersistsSession() async throws {
+        let client = try realClient()
         let storage = IntegrationStorage()
         defer { storage.cleanup() }
+        let repository = GRPCAuthRepository(client: client, identityStorage: storage)
         let flow = AuthFlow()
         flow.showRegistration()
         let model = RegistrationViewModel(repository: repository, storage: storage, onSuccess: { flow.authenticated() })
@@ -32,13 +33,14 @@ final class GRPCIntegrationTests: XCTestCase {
         XCTAssertNil(model.errorMessage)
         XCTAssertEqual(flow.screen, .success)
         XCTAssertFalse(model.isLoading)
-        try storage.assertMockTokens()
+        try storage.assertMockSession(login: "new_user")
     }
 
     func testRealSignInWithoutRegistrationNavigatesToSuccess() async throws {
-        let repository = GRPCAuthRepository(client: try realClient())
+        let client = try realClient()
         let storage = IntegrationStorage()
         defer { storage.cleanup() }
+        let repository = GRPCAuthRepository(client: client, identityStorage: storage)
         let flow = AuthFlow()
         let model = LoginViewModel(repository: repository, storage: storage, onSuccess: { flow.authenticated() })
         model.login = "unregistered_user"
@@ -47,7 +49,7 @@ final class GRPCIntegrationTests: XCTestCase {
         XCTAssertNil(model.errorMessage)
         XCTAssertEqual(flow.screen, .success)
         XCTAssertFalse(model.isLoading)
-        try storage.assertMockTokens()
+        try storage.assertMockSession(login: "unregistered_user")
     }
 
     func testRealTransportDeliversInvalidArgument() async throws {
@@ -55,12 +57,11 @@ final class GRPCIntegrationTests: XCTestCase {
         do {
             let _: Auth_SignUpResponse = try await client.withAuthClient {
                 var request = Auth_SignUpRequest()
-                request.userName = "invalid_confirmation_user"
                 request.userPassword = "123456"
-                request.userPasswordConfirm = "different"
+                request.userIdentifyString = "integration-device"
                 return try await $0.signUp(request, options: AppGRPCClient.callOptions)
             }
-            XCTFail("Mismatched confirmation must fail on the server")
+            XCTFail("An empty username must fail on the server")
         } catch let error as RPCError {
             XCTAssertEqual(error.code, .invalidArgument)
         }
@@ -68,9 +69,21 @@ final class GRPCIntegrationTests: XCTestCase {
 }
 
 @MainActor
-private final class IntegrationStorage: SessionStorage {
+private final class IntegrationStorage: SessionStorage, UserDeviceIdentityStorage {
     private let keychain = KeychainSessionStorage(service: "carsharing.integration.\(UUID().uuidString)")
     private var saved: AuthSession?
+    private var identities: [String: String] = [:]
+
+    func identifyString(for login: String) throws -> String {
+        #if os(iOS)
+        return try KeychainUserDeviceIdentityStorage(service: keychain.service + ".identity").identifyString(for: login)
+        #else
+        if let existing = identities[login] { return existing }
+        let identity = UUID().uuidString.lowercased()
+        identities[login] = identity
+        return identity
+        #endif
+    }
 
     func save(_ session: AuthSession) throws {
         #if os(iOS)
@@ -79,7 +92,7 @@ private final class IntegrationStorage: SessionStorage {
         saved = session
     }
 
-    func assertMockTokens() throws {
+    func assertMockSession(login: String) throws {
         var session = saved
         #if os(iOS)
         var data: CFTypeRef?
@@ -94,11 +107,13 @@ private final class IntegrationStorage: SessionStorage {
         #endif
         XCTAssertEqual(session?.accessToken, "mock_access_token")
         XCTAssertEqual(session?.refreshToken, "mock_refresh_token")
+        XCTAssertEqual(session?.userIdentifyString, try identifyString(for: login))
     }
 
     func cleanup() {
         #if os(iOS)
         SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: keychain.service] as CFDictionary)
+        SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: keychain.service + ".identity"] as CFDictionary)
         #endif
     }
 }

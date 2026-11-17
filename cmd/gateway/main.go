@@ -10,7 +10,7 @@ import (
 
 	"carsharing/internal/delivery/grpc/handler"
 	"carsharing/internal/delivery/grpc/interceptors"
-	"carsharing/internal/repository/mock"
+	"carsharing/internal/repository/postgres"
 	"carsharing/internal/service"
 	"carsharing/internal/tokens"
 	"carsharing/pkg/auth"
@@ -77,7 +77,7 @@ func main() {
 
 	// handler
 	// repository in service
-	authRepository := mock.NewMockAuthRepository()
+	authRepository := postgres.NewAuthRepository(postgresPool)
 	authService := service.NewAuthService(authRepository, nil)
 	authHandler := handler.NewAuthHandler(authService)
 

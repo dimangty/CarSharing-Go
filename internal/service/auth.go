@@ -51,15 +51,7 @@ func (a *AuthService) LoginUser(
 	ctx context.Context,
 	login, password, userIdentify string,
 ) (*domain.Auth, error) {
-	passwordHash, err := bcrypt.GenerateFromPassword(
-		[]byte(password),
-		bcrypt.DefaultCost,
-	)
-	if err != nil {
-		return nil, domain.ErrInternal
-	}
-
-	return a.repo.LoginUser(ctx, login, string(passwordHash), userIdentify)
+	return a.repo.LoginUser(ctx, login, password, userIdentify)
 }
 
 func (a *AuthService) LogoutUser(

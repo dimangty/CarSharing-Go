@@ -66,14 +66,14 @@ final class AuthViewModelTests: XCTestCase {
         let flow = AuthFlow()
         flow.showRegistration()
         let model = RegistrationViewModel(repository: repository, storage: storage, onSuccess: { flow.authenticated() })
-        model.login = "new_user"
+        model.login = " new_user "
         model.password = "123456"
         model.confirmation = "123456"
         let task = Task { await model.submit() }
         await repository.waitForRequest()
         XCTAssertTrue(model.isLoading)
         await model.submit()
-        XCTAssertEqual(repository.requests, [.signUp("new_user", "123456", "123456")])
+        XCTAssertEqual(repository.requests, [.signUp("new_user", "123456")])
         repository.complete(.success(session))
         await task.value
         XCTAssertFalse(model.isLoading)
@@ -152,7 +152,7 @@ final class AuthViewModelTests: XCTestCase {
     }
 }
 
-private let session = AuthSession(accessToken: "mock_access_token", refreshToken: "mock_refresh_token")
+private let session = AuthSession(accessToken: "", refreshToken: "", userIdentifyString: "pair-id")
 
 @MainActor
 final class MemoryStorage: SessionStorage {
@@ -168,7 +168,7 @@ final class MemoryStorage: SessionStorage {
 final class ControlledRepository: AuthRepository {
     enum Request: Equatable {
         case signIn(String, String)
-        case signUp(String, String, String)
+        case signUp(String, String)
     }
     var requests: [Request] = []
     private var continuation: CheckedContinuation<AuthSession, any Error>?
@@ -177,8 +177,8 @@ final class ControlledRepository: AuthRepository {
     func signIn(login: String, password: String) async throws -> AuthSession {
         try await suspend(.signIn(login, password))
     }
-    func signUp(login: String, password: String, confirmation: String) async throws -> AuthSession {
-        try await suspend(.signUp(login, password, confirmation))
+    func signUp(login: String, password: String) async throws -> AuthSession {
+        try await suspend(.signUp(login, password))
     }
     private func suspend(_ request: Request) async throws -> AuthSession {
         requests.append(request)

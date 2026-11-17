@@ -89,7 +89,7 @@ nonisolated struct Auth_SignUpRequest: Sendable {
 
   var userPassword: String = String()
 
-  var userPasswordConfirm: String = String()
+  var userIdentifyString: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -300,7 +300,7 @@ nonisolated extension Auth_SignOutResponse: SwiftProtobuf.Message, SwiftProtobuf
 
 nonisolated extension Auth_SignUpRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SignUpRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_name\0\u{3}user_password\0\u{3}user_password_confirm\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_name\0\u{3}user_password\0\u{3}user_identify_string\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -310,7 +310,7 @@ nonisolated extension Auth_SignUpRequest: SwiftProtobuf.Message, SwiftProtobuf._
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.userName) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.userPassword) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self.userPasswordConfirm) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.userIdentifyString) }()
       default: break
       }
     }
@@ -323,8 +323,8 @@ nonisolated extension Auth_SignUpRequest: SwiftProtobuf.Message, SwiftProtobuf._
     if !self.userPassword.isEmpty {
       try visitor.visitSingularStringField(value: self.userPassword, fieldNumber: 2)
     }
-    if !self.userPasswordConfirm.isEmpty {
-      try visitor.visitSingularStringField(value: self.userPasswordConfirm, fieldNumber: 3)
+    if !self.userIdentifyString.isEmpty {
+      try visitor.visitSingularStringField(value: self.userIdentifyString, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -332,7 +332,7 @@ nonisolated extension Auth_SignUpRequest: SwiftProtobuf.Message, SwiftProtobuf._
   static func ==(lhs: Auth_SignUpRequest, rhs: Auth_SignUpRequest) -> Bool {
     if lhs.userName != rhs.userName {return false}
     if lhs.userPassword != rhs.userPassword {return false}
-    if lhs.userPasswordConfirm != rhs.userPasswordConfirm {return false}
+    if lhs.userIdentifyString != rhs.userIdentifyString {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

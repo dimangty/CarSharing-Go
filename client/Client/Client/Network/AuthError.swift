@@ -10,7 +10,7 @@ enum AuthError: Error, LocalizedError {
         switch self {
         case .configuration: "Проверьте настройки адреса, порта и TLS сервера."
         case .invalidResponse: "Сервер не подтвердил авторизацию. Попробуйте ещё раз."
-        case .storage: "Не удалось сохранить токены в Keychain. Попробуйте ещё раз."
+        case .storage: "Не удалось получить или сохранить данные авторизации в Keychain. Попробуйте ещё раз."
         }
     }
 
@@ -20,7 +20,7 @@ enum AuthError: Error, LocalizedError {
             return "Не удалось выполнить запрос. Проверьте соединение и попробуйте ещё раз."
         }
         switch rpc.code {
-        case .invalidArgument: return "Проверьте логин, пароль и подтверждение пароля."
+        case .invalidArgument: return "Проверьте логин и пароль."
         case .unauthenticated, .permissionDenied: return "Не удалось войти. Проверьте введённые данные."
         case .unavailable: return "Сервер недоступен. Проверьте адрес сервера и соединение."
         case .deadlineExceeded: return "Сервер не ответил вовремя. Попробуйте ещё раз."

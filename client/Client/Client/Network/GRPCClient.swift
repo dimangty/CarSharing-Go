@@ -1,8 +1,21 @@
 import GRPCCore
 import GRPCNIOTransportHTTP2TransportServices
 
-struct GRPCClient: Sendable {
+protocol AuthRPCClient: Sendable {
+    func signIn(_ request: Auth_SignInRequest) async throws -> Auth_SignInResponse
+    func signUp(_ request: Auth_SignUpRequest) async throws -> Auth_SignUpResponse
+}
+
+struct GRPCClient: AuthRPCClient {
     let configuration: GRPCConfiguration
+
+    func signIn(_ request: Auth_SignInRequest) async throws -> Auth_SignInResponse {
+        try await withAuthClient { try await $0.signIn(request, options: Self.callOptions) }
+    }
+
+    func signUp(_ request: Auth_SignUpRequest) async throws -> Auth_SignUpResponse {
+        try await withAuthClient { try await $0.signUp(request, options: Self.callOptions) }
+    }
 
     // A scoped client owns the HTTP/2 connection for one operation. The library
     // closes connections on success, failure and structured-task cancellation.

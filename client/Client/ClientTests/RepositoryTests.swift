@@ -7,11 +7,28 @@ import GRPCCore
 #endif
 
 final class RepositoryTests: XCTestCase {
-    func testRejectsFailureAndIncompleteResponses() {
-        for (success, access, refresh) in [(false, "a", "r"), (true, "", "r"), (true, "a", "")] {
-            XCTAssertThrowsError(try GRPCAuthRepository.session(success: success, access: access, refresh: refresh))
+    func testSuccessDoesNotRequireTokens() throws {
+        for (access, refresh) in [("", ""), ("", "r"), ("a", ""), ("a", "r")] {
+            XCTAssertEqual(
+                try GRPCAuthRepository.session(success: true, access: access, refresh: refresh, identity: "pair-id"),
+                AuthSession(accessToken: access, refreshToken: refresh, userIdentifyString: "pair-id")
+            )
         }
-        XCTAssertEqual(try GRPCAuthRepository.session(success: true, access: "a", refresh: "r"), AuthSession(accessToken: "a", refreshToken: "r"))
+    }
+
+    func testRejectsUnsuccessfulResponsesRegardlessOfTokens() {
+        for (access, refresh) in [("", ""), ("a", "r")] {
+            XCTAssertThrowsError(try GRPCAuthRepository.session(success: false, access: access, refresh: refresh, identity: "pair-id"))
+        }
+    }
+
+    func testSignUpIdentifyStringUsesFieldThreeAndCurrentJSONName() throws {
+        let request = try Auth_SignUpRequest(jsonString: #"{"userName":"n","userPassword":"p","userIdentifyString":"i"}"#)
+        // Hand-encoded fixture from auth.proto: three length-delimited strings, fields 1, 2, 3.
+        XCTAssertEqual(try request.serializedData(), Data([0x0a, 1, 0x6e, 0x12, 1, 0x70, 0x1a, 1, 0x69]))
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: request.jsonUTF8Data()) as? [String: Any])
+        XCTAssertEqual(json["userIdentifyString"] as? String, "i")
+        XCTAssertNil(json["userPasswordConfirm"])
     }
 
     func testEndpointDefaultsAndOverrides() throws {
