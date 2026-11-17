@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"carsharing/internal/domain"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthRepositoryInterface interface {
@@ -23,16 +25,6 @@ type AuthService struct {
 	tkMgr AuthTokenInterface
 }
 
-type AuthRepository struct {
-	db string
-}
-
-func NewAuthRepository() *AuthRepository {
-	return &AuthRepository{
-		db: "",
-	}
-}
-
 func NewAuthService(r AuthRepositoryInterface, t AuthTokenInterface) *AuthService {
 	return &AuthService{
 		repo:  r,
@@ -44,14 +36,30 @@ func (a *AuthService) CreateUser(
 	ctx context.Context,
 	login, password, userIdentify string,
 ) (*domain.Auth, error) {
-	return a.repo.CreateUser(ctx, login, password, userIdentify)
+	passwordHash, err := bcrypt.GenerateFromPassword(
+		[]byte(password),
+		bcrypt.DefaultCost,
+	)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	return a.repo.CreateUser(ctx, login, string(passwordHash), userIdentify)
 }
 
 func (a *AuthService) LoginUser(
 	ctx context.Context,
 	login, password, userIdentify string,
 ) (*domain.Auth, error) {
-	return a.repo.LoginUser(ctx, login, password, userIdentify)
+	passwordHash, err := bcrypt.GenerateFromPassword(
+		[]byte(password),
+		bcrypt.DefaultCost,
+	)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	return a.repo.LoginUser(ctx, login, string(passwordHash), userIdentify)
 }
 
 func (a *AuthService) LogoutUser(
