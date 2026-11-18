@@ -82,9 +82,6 @@ func (r *AuthRepository) LoginUser(
 		return nil, domain.ErrInvalidCredentials
 	}
 	if err != nil {
-		if ctxErr := ctx.Err(); ctxErr != nil {
-			return nil, ctxErr
-		}
 		return nil, domain.ErrInternal
 	}
 
