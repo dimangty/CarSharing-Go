@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package post;
+
+// Path to generated code
+option go_package = "carsharing/pkg/post;post";
+
+message Post {
+  int64 id        = 1;
+  string title    = 2;
+  string content  = 3;
+}
+
+message ListPostsResponse {
+  repeated PostSummary posts = 1; // all authors, id DESC
+  bool success               = 3;
+  string message             = 4;
+}
