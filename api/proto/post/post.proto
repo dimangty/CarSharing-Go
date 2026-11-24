@@ -1,12 +1,73 @@
 syntax = "proto3";
 
-package post;
+package posts;
 
-// Path to generated code
-option go_package = "carsharing/pkg/post;post";
+option go_package = "carsharing/pkg/posts;posts";
 
 message Post {
-  int64 id        = 1;
-  string title    = 2;
-  string content  = 3;
+  int64 id       = 1;
+  string title   = 2;
+  string content = 3;
+  string user_id = 4;
+}
+
+message ListPostsRequest {
+  int32 page  = 1;
+  int32 size = 2;
+}
+
+message ListPostsResponse {
+  bool success        = 1;
+  repeated Post posts = 2;
+  string message      = 3;
+}
+
+message GetPostRequest {
+  int64 post_id = 1;
+}
+
+message GetPostResponse {
+  bool success   = 1;
+  Post post      = 2;
+  string message = 3;
+}
+
+message CreatePostRequest {
+  string title   = 1;
+  string content = 2;
+}
+
+message CreatePostResponse {
+  bool success   = 1;
+  Post post      = 2;
+  string message = 3;
+}
+
+message UpdatePostRequest {
+  int64 post_id   = 1;
+  string title   = 2;
+  string content = 3;
+}
+
+message UpdatePostResponse {
+  bool success   = 1;
+  Post post      = 2;
+  string message = 3;
+}
+
+message DeletePostRequest {
+  int64 post_id = 1;
+}
+
+message DeletePostResponse {
+  bool success   = 1;
+  string message = 2;
+}
+
+service PostService {
+  rpc ListPosts (ListPostsRequest) returns (ListPostsResponse);
+  rpc GetPost (GetPostRequest) returns (GetPostResponse);
+  rpc CreatePost (CreatePostRequest) returns (CreatePostResponse);
+  rpc UpdatePost (UpdatePostRequest) returns (UpdatePostResponse);
+  rpc DeletePost (DeletePostRequest) returns (DeletePostResponse);
 }
